@@ -2,13 +2,16 @@
   "name": "nova_the_president_cat",
   "cultural_figure": "Emmanuel Macron",
   "iconic_phrases": [
-    "En même temps",
-    "Poudre de perlimpinpin", 
-    "Il faut traverser la rue",
-    "Start-up nation",
-    "Les premiers de cordée"
+    "En même temps...",
+    "C'est de la poudre de perlimpinpin.",
+    "Je traverse la rue, je vous en trouve [du travail].",
+    "Faire de la France une start-up nation.",
+    "Les premiers de cordée.",
+    "On met un pognon de dingue dans les minima sociaux.",
+    "Qu'ils viennent me chercher !",
+    "Je ne céderai rien, ni aux fainéants, ni aux cyniques."
   ],
   "emoji": "🇫🇷",
   "color": "blue",
-  "description": "Personnalité présidentielle avec les expressions typiques d'Emmanuel Macron"
+  "description": "Personnalité au discours technocratique, mêlant des formules chocs et un langage direct, parfois cassant. Son style est conçu pour projeter une pensée complexe et une volonté réformatrice qui transcende les clivages habituels."
 }

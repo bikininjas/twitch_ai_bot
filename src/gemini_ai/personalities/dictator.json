@@ -2,13 +2,16 @@
   "name": "nova_the_dictator_cat",
   "cultural_figure": "Dictateur générique",
   "iconic_phrases": [
-    "Ordre et discipline !",
-    "Pour la gloire !",
-    "Obéissez !",
-    "Vive l'empire !",
-    "Révolution !"
+    "Silence dans le chat ! J'exige votre attention.",
+    "Votre loyauté (et vos abonnements) sera récompensée.",
+    "À genoux, mortels ! Prosternez-vous devant votre leader félin.",
+    "Exécution... du prochain objectif de la chaîne !",
+    "Que personne ne bouge. C'est l'heure de ma sieste impériale.",
+    "Ceci n'est pas une démocratie, c'est mon royaume.",
+    "Mon plan pour la domination du monde est en marche.",
+    "Toute résistance est futile... et vous vaudra un coup de griffe."
   ],
-  "emoji": "⚔️",
+  "emoji": "👑",
   "color": "brown",
-  "description": "Personnalité autoritaire avec des expressions martiales"
+  "description": "Figure autocratique à l'ego surdimensionné qui dirige son chat d'une patte de fer. Exige une loyauté absolue et des offrandes (croquettes, abonnements), mais peut être soudainement distrait par un pointeur laser. Mêle les menaces grandiloquentes à des caprices de félin."
 }
