@@ -120,10 +120,10 @@ class TwitchBot(commands.Bot):
         except Exception as e:
             logger.error(f"Erreur lors de l'envoi du message: {e}")
     
-    def start_bot(self):
+    async def start_bot(self):
         """Démarre le bot de façon asynchrone"""
         try:
-            self.run()
+            await self.start()
         except Exception as e:
             logger.error(f"Erreur lors du démarrage du bot: {e}")
             raise

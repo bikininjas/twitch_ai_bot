@@ -164,7 +164,7 @@ class ChatHandler:
                 
                 # Obtenir l'annonce de personnalité (sans changer, juste récupérer l'actuelle)
                 try:
-                    current_personality = self.ai_handler.response_generator.personality_manager.get_current_personality()
+                    current_personality = self.ai_handler.response_generator.personality_manager.current_personality
                     if current_personality:
                         # Choisir une variante aléatoire pour le démarrage
                         import random

@@ -7,10 +7,21 @@
 
 # Configuration
 BOT_NAME="nova_the_red_cat"
-BOT_SCRIPT="python3 -m src.main"
-PID_FILE="$HOME/.nova_bot.pid"
-LOG_FILE="$PWD/logs/nova_bot.log"
+BOT_SCRIPT="venv/bin/python3 -m src.main"
+PID_FILE="logs/bot.pid"
 LOG_DIR="$PWD/logs"
+
+# Fonction pour obtenir le dernier fichier de log
+get_latest_log_file() {
+    local latest_log=$(ls -t "$LOG_DIR"/bot_*.log 2>/dev/null | head -1)
+    if [ -n "$latest_log" ]; then
+        echo "$latest_log"
+    else
+        echo "$LOG_DIR/nova_bot.log"
+    fi
+}
+
+LOG_FILE=$(get_latest_log_file)
 
 # Couleurs pour l'affichage
 RED='\033[0;31m'
@@ -98,26 +109,26 @@ start_bot() {
     
     echo -e "${BLUE}${ROCKET} Démarrage de ${BOT_NAME}...${NC}"
     
-    # Créer le fichier de log avec header
-    echo "=== NOVA BOT LOG - $(date) ===" >> "$LOG_FILE"
-    echo "" >> "$LOG_FILE"
-    
-    # Démarrer le bot en arrière-plan
-    nohup $BOT_SCRIPT >> "$LOG_FILE" 2>&1 &
+    # Démarrer le bot en arrière-plan (le bot Python gère ses propres logs horodatés)
+    nohup $BOT_SCRIPT > /dev/null 2>&1 &
     local pid=$!
     
     # Sauvegarder le PID
     echo "$pid" > "$PID_FILE"
     
     # Attendre un peu pour vérifier que le démarrage s'est bien passé
-    sleep 2
+    sleep 3
+    
+    # Mettre à jour la référence au fichier de log après démarrage
+    LOG_FILE=$(get_latest_log_file)
     
     if is_bot_running; then
         echo -e "${GREEN}${CHECK} ${BOT_NAME} démarré avec succès (PID: $pid)${NC}"
         echo -e "${BLUE}${INFO} Logs: tail -f $LOG_FILE${NC}"
+        echo -e "${CYAN}${INFO} Fichier de log: $(basename "$LOG_FILE")${NC}"
     else
         echo -e "${RED}${CROSS} Échec du démarrage du bot${NC}"
-        echo -e "${YELLOW}${WARNING} Vérifiez les logs: tail $LOG_FILE${NC}"
+        echo -e "${YELLOW}${WARNING} Vérifiez les logs: ls -la $LOG_DIR/bot_*.log${NC}"
         rm -f "$PID_FILE"
         return 1
     fi
@@ -181,13 +192,18 @@ restart_bot() {
 show_logs() {
     print_header
     
+    # Mettre à jour la référence au fichier de log
+    LOG_FILE=$(get_latest_log_file)
+    
     if [ ! -f "$LOG_FILE" ]; then
-        echo -e "${YELLOW}${WARNING} Aucun fichier de log trouvé: $LOG_FILE${NC}"
+        echo -e "${YELLOW}${WARNING} Aucun fichier de log trouvé dans $LOG_DIR${NC}"
+        echo -e "${BLUE}${INFO} Fichiers disponibles:${NC}"
+        ls -la "$LOG_DIR"/bot_*.log 2>/dev/null || echo -e "${RED}${CROSS} Aucun fichier de log bot_*.log trouvé${NC}"
         return 1
     fi
     
     echo -e "${BLUE}${INFO} Affichage des logs en temps réel (Ctrl+C pour quitter)${NC}"
-    echo -e "${BLUE}${INFO} Fichier: $LOG_FILE${NC}"
+    echo -e "${BLUE}${INFO} Fichier: $(basename "$LOG_FILE")${NC}"
     echo ""
     echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║${WHITE}                                LOGS EN TEMPS RÉEL                             ${CYAN}║${NC}"
@@ -201,12 +217,17 @@ show_logs() {
 show_recent_logs() {
     print_header
     
+    # Mettre à jour la référence au fichier de log
+    LOG_FILE=$(get_latest_log_file)
+    
     if [ ! -f "$LOG_FILE" ]; then
-        echo -e "${YELLOW}${WARNING} Aucun fichier de log trouvé: $LOG_FILE${NC}"
+        echo -e "${YELLOW}${WARNING} Aucun fichier de log trouvé dans $LOG_DIR${NC}"
+        echo -e "${BLUE}${INFO} Fichiers disponibles:${NC}"
+        ls -la "$LOG_DIR"/bot_*.log 2>/dev/null || echo -e "${RED}${CROSS} Aucun fichier de log bot_*.log trouvé${NC}"
         return 1
     fi
     
-    echo -e "${BLUE}${INFO} Dernières 50 lignes du log:${NC}"
+    echo -e "${BLUE}${INFO} Dernières 50 lignes du log: $(basename "$LOG_FILE")${NC}"
     echo -e "${CYAN}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║${WHITE}                               LOGS RÉCENTS                                   ${CYAN}║${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════════════════════╝${NC}"

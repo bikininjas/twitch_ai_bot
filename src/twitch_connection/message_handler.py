@@ -15,6 +15,7 @@ class TwitchMessageHandler:
         """Initialise le gestionnaire de messages"""
         self.bot: Optional[TwitchBot] = None
         self.is_connected = False
+        self.bot_task = None
     
     def initialize_bot(self, message_callback=None):
         """
@@ -42,21 +43,14 @@ class TwitchMessageHandler:
             logger.debug(f"🔑 Token: {self.bot._stored_token[:10]}...")
             logger.debug(f"🆔 Client ID: {self.bot._stored_client_id[:10]}...")
             
-            # TwitchIO utilise run() dans un thread séparé
-            import threading
+            # TwitchIO doit fonctionner dans la boucle d'événements principale
+            # On crée une tâche pour le bot
+            import asyncio
             
-            def run_bot():
-                try:
-                    self.bot.run()
-                except Exception as e:
-                    logger.error(f"❌ Erreur dans le thread du bot: {e}")
-            
-            # Démarrer le bot dans un thread séparé
-            bot_thread = threading.Thread(target=run_bot, daemon=True)
-            bot_thread.start()
+            # Créer une tâche pour exécuter le bot
+            self.bot_task = asyncio.create_task(self.bot.start())
             
             # Attendre un peu pour la connexion
-            import asyncio
             await asyncio.sleep(3)
             
             # Vérifier si des canaux sont connectés
@@ -96,8 +90,23 @@ class TwitchMessageHandler:
         """Déconnecte le bot"""
         if self.bot and self.is_connected:
             try:
-                # TwitchIO ne fournit pas de méthode disconnect directe
-                # Le bot s'arrêtera quand le processus se termine
+                # Annuler la tâche du bot si elle existe
+                if self.bot_task and not self.bot_task.done():
+                    self.bot_task.cancel()
+                
+                # Fermer la connexion du bot
+                if hasattr(self.bot, 'close'):
+                    import asyncio
+                    try:
+                        # Essayer de fermer proprement
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            loop.create_task(self.bot.close())
+                        else:
+                            asyncio.run(self.bot.close())
+                    except Exception as e:
+                        logger.warning(f"Erreur lors de la fermeture du bot: {e}")
+                
                 self.is_connected = False
                 logger.info("Bot déconnecté")
             except Exception as e:

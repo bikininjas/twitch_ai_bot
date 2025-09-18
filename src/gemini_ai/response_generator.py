@@ -83,7 +83,7 @@ class GeminiResponseGenerator:
         starter = f"{catchphrase} {username}, "
         
         # Obtenir le prompt de base de la personnalité actuelle
-        personality_prompt = self.personality_manager.get_personality_prompt()
+        personality_prompt = self.personality_manager.get_current_prompt()
         
         prompt = f"""
         {personality_prompt}
@@ -96,7 +96,13 @@ class GeminiResponseGenerator:
         
         Essaie de faire un jeu de mots avec le pseudo '{username}' si possible.
         
-        Réponse (max 200 caractères):
+        IMPORTANT:
+        - Utilise des phrases courtes et complètes
+        - Maximum 400 caractères au total
+        - Termine toujours tes phrases proprement (avec ponctuation)
+        - Évite les phrases trop longues qui pourraient être coupées
+        
+        Réponse:
         """
         
         return prompt
@@ -122,15 +128,55 @@ class GeminiResponseGenerator:
         if not any(sig in cleaned for sig in ["- nova", "nova 🐱", "nova ⚡", "nova 🌙", "nova 🧠", "nova 😡", "nova 😴", "nova 🎭", "nova 💕"]):
             cleaned = f"{cleaned} {signature}"
         
-        # Limitation de la longueur
-        if len(cleaned) > 200:
-            cleaned = cleaned[:197] + "..."
+        # Limitation intelligente de la longueur (respecter les phrases)
+        max_length = 450  # Augmenter la limite pour les messages Twitch
+        if len(cleaned) > max_length:
+            cleaned = self._truncate_at_sentence_end(cleaned, max_length)
         
         # Vérification que le username est mentionné
         if username.lower() not in cleaned.lower():
             cleaned = f"@{username} {cleaned}"
         
         return cleaned
+    
+    def _truncate_at_sentence_end(self, text: str, max_length: int) -> str:
+        """
+        Tronque le texte en respectant la fin des phrases
+        
+        Args:
+            text: Texte à tronquer
+            max_length: Longueur maximale
+            
+        Returns:
+            str: Texte tronqué proprement
+        """
+        if len(text) <= max_length:
+            return text
+        
+        # Chercher la dernière ponctuation de fin de phrase avant la limite
+        sentence_endings = ['. ', '! ', '? ', '... ', '. 🎮', '! 🎮', '? 🎮']
+        
+        # Prendre le texte jusqu'à la limite
+        truncated = text[:max_length]
+        
+        # Chercher la dernière ponctuation de fin de phrase
+        last_sentence_end = -1
+        for ending in sentence_endings:
+            pos = truncated.rfind(ending)
+            if pos > last_sentence_end:
+                last_sentence_end = pos + len(ending)
+        
+        # Si on trouve une fin de phrase, couper là
+        if last_sentence_end > 0 and last_sentence_end < len(truncated) * 0.7:  # Au moins 70% du texte
+            return text[:last_sentence_end].strip()
+        
+        # Sinon, chercher le dernier espace avant la limite pour éviter de couper un mot
+        last_space = truncated.rfind(' ')
+        if last_space > 0:
+            return text[:last_space] + "..."
+        
+        # En dernier recours, couper brutalement avec ...
+        return text[:max_length-3] + "..."
     
     def _get_fallback_response(self, username: str) -> str:
         """
@@ -173,8 +219,7 @@ class GeminiResponseGenerator:
     
     def get_current_personality_name(self) -> str:
         """Retourne le nom de la personnalité actuelle"""
-        current = self.personality_manager.get_current_personality()
-        return current.name if current else "nova_the_red_cat"
+        return self.personality_manager.get_current_personality_name()
     
     def get_personality_stats(self) -> dict:
         """Retourne les statistiques des personnalités"""
