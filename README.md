@@ -10,6 +10,32 @@ Un bot Twitch intelligent et sarcastique alimenté par Google Gemini AI qui inte
 - **📢 Détection de Mentions** : Répond quand il est mentionné par d'autres utilisateurs
 - **🎪 Jeux de Mots** : Créé des jeux de mots avec les pseudos des utilisateurs
 - **⚡ Architecture Modulaire** : Code organisé par fonctionnalités dans des dossiers séparés
+- **🔧 Gestionnaire de Bot** : Interface interactive pour contrôler le bot en background
+- **🎭 Système de Personnalités** : 8 personnalités différentes avec configuration JSON
+
+## 🚀 Démarrage Rapide
+
+### Installation Automatique
+
+```bash
+# Installation et configuration automatique
+./install.sh
+```
+
+### Gestionnaire de Bot
+
+```bash
+# Lancer le gestionnaire interactif
+./bot_manager.sh
+```
+
+Le gestionnaire de bot offre une interface interactive avec menu coloré pour :
+- ✅ Démarrer le bot en arrière-plan
+- ⏹️ Arrêter le bot proprement
+- 🔄 Redémarrer le bot
+- 📊 Voir le statut (PID, temps de fonctionnement)
+- 📄 Afficher les logs en temps réel
+- ⚙️ Configuration et aide
 
 ## 📂 Structure du Projet
 
@@ -36,6 +62,10 @@ twitch_ai_bot/
 │   ├── test_gemini.py          # Tests Gemini AI
 │   ├── test_functionality.py   # Tests de fonctionnalité
 │   └── run_tests.py            # Script de test global
+├── personalities_config.json   # Configuration des 8 personnalités
+├── bot_manager.sh              # Gestionnaire interactif du bot
+├── install.sh                  # Script d'installation automatique
+├── BOT_MANAGER_README.md       # Documentation du gestionnaire
 ├── .env                        # Variables d'environnement (à configurer)
 ├── .gitignore                  # Fichiers ignorés par Git
 ├── requirements.txt            # Dépendances Python
@@ -43,7 +73,26 @@ twitch_ai_bot/
 └── README.md                   # Cette documentation
 ```
 
-## 🚀 Installation
+## 🎭 Système de Personnalités
+
+Le bot dispose de 8 personnalités distinctes configurées dans `personalities_config.json` :
+
+1. **👑 Nova the Red Cat** - Personnalité de base sarcastique
+2. **🧙‍♂️ Gandalf** - Sage et mystérieux avec références LOTR
+3. **🗡️ Jon Snow** - Noble et stoïque avec répliques GoT
+4. **🤡 Joker** - Chaotique et imprévisible
+5. **🏴‍☠️ Jack Sparrow** - Pirate charmeur et rusé
+6. **🔬 Tony Stark** - Génie arrogant et technophile
+7. **🗿 Stoic Marcus** - Philosophe stoïcien et sage
+8. **🥷 Ninja Hattori** - Ninja mystérieux et agile
+
+Chaque personnalité a ses propres :
+- **Traits de caractère** uniques
+- **Phrases iconiques** authentiques
+- **Style de réponse** adapté
+- **Références culturelles** appropriées
+
+## 🛠️ Installation Manuelle
 
 ### 1. Prérequis
 
@@ -117,7 +166,14 @@ python3 tests/test_functionality.py # Test fonctionnalités
 
 ## 🎮 Utilisation
 
-### Lancement du Bot
+### Gestionnaire de Bot (Recommandé)
+
+```bash
+# Interface interactive complète
+./bot_manager.sh
+```
+
+### Lancement Direct
 
 ```bash
 # Méthode simple
@@ -125,6 +181,9 @@ python3 bot.py
 
 # Ou directement
 python3 src/main.py
+
+# En arrière-plan avec logs
+nohup python3 bot.py > logs/bot.log 2>&1 &
 ```
 
 ### Comportement du Bot
@@ -152,6 +211,39 @@ Bot: @viewer123 Oui je suis là... contrairement à tes chances de win ! 💀
 #### 3. Pas de Réponse
 - Messages normaux des autres utilisateurs (sauf mention)
 
+## 🔧 Gestionnaire de Bot - Fonctionnalités
+
+### Interface Interactive
+
+Le gestionnaire `bot_manager.sh` propose un menu coloré avec les options :
+
+```
+🤖 === NOVA THE RED CAT - BOT MANAGER ===
+
+1. ▶️  Démarrer le bot
+2. ⏹️  Arrêter le bot  
+3. 🔄 Redémarrer le bot
+4. 📊 Statut du bot
+5. 📄 Voir les logs
+6. ⚙️  Configuration
+7. ❓ Aide
+8. 🚪 Quitter
+```
+
+### Gestion des Processus
+
+- **Démarrage** : Lance le bot en arrière-plan avec `nohup`
+- **PID Tracking** : Sauvegarde du PID dans `logs/bot.pid`
+- **Arrêt Gracieux** : Utilise `SIGTERM` puis `SIGKILL` si nécessaire
+- **Monitoring** : Affichage du statut, temps de fonctionnement, utilisation CPU/mémoire
+
+### Logs et Monitoring
+
+- **Logs Centralisés** : Tous les logs dans `logs/bot.log`
+- **Rotation** : Logs archivés automatiquement
+- **Affichage Temps Réel** : `tail -f` intégré dans le gestionnaire
+- **Filtering** : Options pour filtrer les logs par niveau
+
 ## 🛠️ Configuration Avancée
 
 ### Logging
@@ -160,12 +252,16 @@ Ajoutez ces variables à votre `.env` pour personnaliser les logs :
 
 ```env
 LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR
-LOG_FILE=bot.log           # Fichier de log optionnel
+LOG_FILE=logs/bot.log      # Fichier de log
 ```
 
 ### Personnalisation de la Personnalité
 
-Modifiez les prompts dans `src/gemini_ai/response_generator.py` pour changer le style du bot.
+Modifiez `personalities_config.json` pour :
+- Ajouter de nouvelles personnalités
+- Modifier les traits existants
+- Personnaliser les phrases iconiques
+- Adapter les styles de réponse
 
 ## 🔧 Architecture Technique
 
@@ -196,6 +292,12 @@ Modifiez les prompts dans `src/gemini_ai/response_generator.py` pour changer le 
 Message Twitch → Détection Mention → IA Gemini → Réponse Chat
 ```
 
+### Gestion des Processus
+
+```
+bot_manager.sh → nohup python3 bot.py → PID file → Monitoring
+```
+
 ## 🚨 Dépannage
 
 ### Erreurs Communes
@@ -220,6 +322,15 @@ python3 bot.py
 - Vérifiez que le nom du bot dans `.env` correspond au nom utilisé dans le chat
 - Testez les mentions : `@nom_du_bot hello`
 
+#### "Gestionnaire ne fonctionne pas"
+```bash
+# Vérifiez les permissions
+chmod +x bot_manager.sh
+
+# Lancez avec debug
+bash -x bot_manager.sh
+```
+
 ### Logs et Debug
 
 ```bash
@@ -227,24 +338,34 @@ python3 bot.py
 LOG_LEVEL=DEBUG python3 bot.py
 
 # Vérifier les logs en temps réel
-tail -f bot.log
+tail -f logs/bot.log
+
+# Avec le gestionnaire
+./bot_manager.sh # Option 5: Voir les logs
 ```
 
 ## 📝 Fonctionnement en Background
 
-Pour faire tourner le bot en permanence sur WSL :
+### Avec le Gestionnaire (Recommandé)
+
+```bash
+./bot_manager.sh
+# Sélectionnez "1. ▶️ Démarrer le bot"
+```
+
+### Méthodes Alternatives
 
 ```bash
 # Avec nohup
-nohup python3 bot.py > bot.log 2>&1 &
+nohup python3 bot.py > logs/bot.log 2>&1 &
 
 # Avec screen
 screen -S twitchbot
 python3 bot.py
 # Ctrl+A puis D pour détacher
 
-# Avec systemd (recommandé)
-# Créez un service systemd pour un démarrage automatique
+# Avec systemd (pour démarrage auto)
+sudo systemctl enable twitchbot.service
 ```
 
 ## 🤝 Contribution
@@ -267,12 +388,22 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 - [ ] Base de données pour historique
 - [ ] Système de points/récompenses
 - [ ] Mini-jeux dans le chat
+- [ ] Interface web pour le gestionnaire
+- [ ] API REST pour contrôle distant
+- [ ] Système de plugins
+- [ ] Backup et restauration automatique
 
 ## 📞 Support
 
 - **Issues** : [GitHub Issues](https://github.com/bikininjas/twitch_ai_bot/issues)
 - **Discussions** : [GitHub Discussions](https://github.com/bikininjas/twitch_ai_bot/discussions)
+- **Documentation** : [BOT_MANAGER_README.md](BOT_MANAGER_README.md)
 
 ---
 
 🤖 **Bot créé avec ❤️ et beaucoup de sarcasme pour la communauté Twitch !**
+
+**Commandes rapides :**
+- `./install.sh` - Installation automatique
+- `./bot_manager.sh` - Gestionnaire interactif
+- `./bot_manager.sh --help` - Aide sur les options CLI
