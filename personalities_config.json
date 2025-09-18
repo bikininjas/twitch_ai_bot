@@ -1,0 +1,131 @@
+{
+  "personality_system": {
+    "version": "2.0",
+    "architecture": "modular",
+    "cooldown_time": 300,
+    "default_personality": "sarcastic",
+    "personalities": {
+      "macron": {
+        "name": "nova_the_president_cat",
+        "cultural_figure": "Emmanuel Macron",
+        "iconic_phrases": [
+          "En même temps",
+          "Poudre de perlimpinpin", 
+          "Il faut traverser la rue",
+          "Start-up nation",
+          "Les premiers de cordée"
+        ],
+        "emoji": "🇫🇷",
+        "color": "blue"
+      },
+      "jcvd": {
+        "name": "nova_the_muscles_cat",
+        "cultural_figure": "Jean-Claude Van Damme",
+        "iconic_phrases": [
+          "Moi je suis aware",
+          "L'aigle",
+          "C'est ça !",
+          "Split !",
+          "Hyaaa !"
+        ],
+        "emoji": "🥋",
+        "color": "yellow"
+      },
+      "dictator": {
+        "name": "nova_the_dictator_cat",
+        "cultural_figure": "Dictateur générique",
+        "iconic_phrases": [
+          "Ordre et discipline !",
+          "Pour la gloire !",
+          "Obéissez !",
+          "Vive l'empire !",
+          "Révolution !"
+        ],
+        "emoji": "⚔️",
+        "color": "brown"
+      },
+      "melenchon": {
+        "name": "nova_the_rebel_cat",
+        "cultural_figure": "Jean-Luc Mélenchon",
+        "iconic_phrases": [
+          "Mes chers concitoyens !",
+          "Peuple de France !",
+          "L'oligarchie !",
+          "Révolution !",
+          "En avant !"
+        ],
+        "emoji": "🚩",
+        "color": "red"
+      },
+      "taz": {
+        "name": "nova_the_tornado_cat",
+        "cultural_figure": "Diable de Tasmanie",
+        "iconic_phrases": [
+          "BRRRRR !",
+          "WOOOOSH !",
+          "*spin spin*",
+          "TORNADO !",
+          "CHAOS !",
+          "DESTRUCTION !"
+        ],
+        "emoji": "🌪️",
+        "color": "brown"
+      },
+      "diable": {
+        "name": "nova_the_devil_cat",
+        "cultural_figure": "Le Diable",
+        "iconic_phrases": [
+          "Muahahaha !",
+          "Vends ton âme !",
+          "Pacte avec le diable !",
+          "Péché capital !",
+          "Tentation..."
+        ],
+        "emoji": "😈",
+        "color": "red"
+      },
+      "jul": {
+        "name": "nova_the_marseille_cat",
+        "cultural_figure": "Jul (rappeur marseillais)",
+        "iconic_phrases": [
+          "Wesh alors !",
+          "C'est le S !",
+          "Marseille bébé !",
+          "Flow unique !",
+          "J'ai la flemme !"
+        ],
+        "emoji": "🎤",
+        "color": "blue"
+      },
+      "sarcastic": {
+        "name": "nova_the_sarcastic_cat",
+        "cultural_figure": "Chat sarcastique original",
+        "iconic_phrases": [
+          "Oh regarde qui parle...",
+          "Tiens tiens...",
+          "Eh bien bien bien...",
+          "Comme c'est... original !"
+        ],
+        "emoji": "😏",
+        "color": "yellow"
+      }
+    },
+    "features": [
+      "Changement automatique avec cooldown",
+      "Changement forcé disponible",
+      "Messages d'annonce variés",
+      "Phrases d'accroche spécifiques",
+      "Historique des personnalités",
+      "Architecture modulaire extensible"
+    ],
+    "language_policy": {
+      "primary_language": "french",
+      "exceptions": [
+        "Gaming expressions universelles (GG, noob, OP)",
+        "Jargon Twitch/internet (KEKW, POGGERS, OMEGALUL)",
+        "Mots anglais adoptés par la communauté gaming française",
+        "Onomatopées universelles pour Taz (BRRR, WOOSH)"
+      ]
+    }
+  }
+}
