@@ -7,10 +7,14 @@ import os
 from datetime import datetime
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from typing import Optional, Union
+
 from dotenv import load_dotenv
 
 
-def setup_logging(log_level: str = "DEBUG", log_dir: str = None) -> logging.Logger:
+def setup_logging(
+    log_level: str = "DEBUG", log_dir: Optional[Union[str, Path]] = None
+) -> logging.Logger:
     """
     Configure le système de logging avec rotation
 
@@ -29,16 +33,16 @@ def setup_logging(log_level: str = "DEBUG", log_dir: str = None) -> logging.Logg
     numeric_level = getattr(logging, log_level.upper(), logging.DEBUG)
 
     # Créer le dossier de logs si nécessaire
-    if not log_dir:
-        log_dir = Path(__file__).parent.parent.parent / "logs"
+    if log_dir:
+        log_dir_path = Path(log_dir)
     else:
-        log_dir = Path(log_dir)
+        log_dir_path = Path(__file__).parent.parent.parent / "logs"
 
-    log_dir.mkdir(exist_ok=True)
+    log_dir_path.mkdir(exist_ok=True)
 
     # Fichier de log avec timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = log_dir / f"bot_{timestamp}.log"
+    log_file = log_dir_path / f"bot_{timestamp}.log"
 
     # Configuration de base
     logging.basicConfig(
@@ -63,7 +67,7 @@ def setup_logging(log_level: str = "DEBUG", log_dir: str = None) -> logging.Logg
     logger.setLevel(numeric_level)
 
     # Nettoyer les anciens logs (garder seulement les 5 derniers)
-    _cleanup_old_logs(log_dir)
+    _cleanup_old_logs(log_dir_path)
 
     logger.info(f"Logging configuré - Niveau: {log_level}, Fichier: {log_file}")
 
@@ -120,6 +124,17 @@ def load_config() -> dict:
         "behavior": {
             "owner_username": os.getenv("OWNER_USERNAME", "redpikpik"),
             "personality": os.getenv("BOT_PERSONALITY", "sarcastic"),
+        },
+        # Stockage des personnalités (JSON par défaut, SQLite Cloud optionnel)
+        "storage": {
+            "personality_db_url": os.getenv("PERSONALITY_DB_URL"),
+            "personality_db_table": os.getenv("PERSONALITY_DB_TABLE", "personalities"),
+            "personality_db_type_column": os.getenv(
+                "PERSONALITY_DB_TYPE_COLUMN", "type"
+            ),
+            "personality_db_payload_column": os.getenv(
+                "PERSONALITY_DB_PAYLOAD_COLUMN", "payload"
+            ),
         },
         # Logging
         "logging": {

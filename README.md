@@ -12,6 +12,7 @@ Un bot Twitch intelligent et sarcastique alimenté par Google Gemini AI qui inte
 - **⚡ Architecture Modulaire** : Code organisé par fonctionnalités dans des dossiers séparés
 - **🔧 Gestionnaire de Bot** : Interface interactive pour contrôler le bot en background
 - **🎭 Système de Personnalités** : 8 personnalités différentes avec configuration JSON
+- **🗄️ Stockage Flex** : JSON versionné par défaut ou backend SQLite Cloud optionnel
 
 ## 🚀 Démarrage Rapide
 
@@ -161,7 +162,41 @@ BOT_PERSONALITY=sarcastic
 # Logging
 LOG_LEVEL=INFO
 LOG_DIR=logs
+
+# Personality Storage (optionnel)
+#PERSONALITY_DB_URL=sqlitecloud://username:password@host:port/dbname
+#PERSONALITY_DB_TABLE=personalities
+#PERSONALITY_DB_TYPE_COLUMN=type
+#PERSONALITY_DB_PAYLOAD_COLUMN=payload
 ```
+
+## 🗄️ Backend de Personnalités (Optionnel)
+
+Le bot charge ses personnalités depuis les fichiers JSON du dossier `src/gemini_ai/personalities/`.
+Pour modifier les paramètres à chaud ou centraliser la configuration, vous pouvez fournir un
+backend SQLite Cloud en renseignant `PERSONALITY_DB_URL` (et éventuellement les noms de table/colonnes).
+
+- Si l'URL est définie et accessible, le bot lira les personnalités depuis SQLite Cloud.
+- En cas d'erreur ou d'absence de configuration, il revient automatiquement aux fichiers JSON locaux.
+
+Pour provisionner la table distante avec les JSON actuels :
+
+```bash
+python scripts/sync_personalities_to_db.py
+```
+
+Le script crée la table si besoin (`type` + `payload`) et effectue un `INSERT OR REPLACE`
+pour chaque personnalité locale. Assurez-vous d'avoir installé `sqlitecloud` (déjà listé
+dans `requirements.txt`) et défini `PERSONALITY_DB_URL` dans votre environnement.
+
+La table attendue doit contenir au minimum deux colonnes :
+
+| Colonne | Rôle | Exemple |
+|---------|------|---------|
+| `type`  | Identifiant unique de la personnalité | `sarcastic` |
+| `payload` | Contenu JSON respectant le schéma `PersonalityConfig` | `{ "schema_version": 1, ... }` |
+
+Les valeurs JSON doivent suivre le schéma défini dans `src/gemini_ai/personalities/README.md` (validé par Pydantic).
 
 **⚠️ Important** : Ne partagez jamais votre fichier `.env` ! Il est déjà dans le `.gitignore`.
 

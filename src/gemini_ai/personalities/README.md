@@ -1,6 +1,8 @@
 # Dossier des Personnalités
 
 Ce dossier contient les fichiers de configuration JSON pour chaque personnalité du bot nova_the_red_cat.
+Ces fichiers restent la source de vérité par défaut même si un backend SQLite Cloud
+est configuré (le bot revient automatiquement à ces JSON en cas d'erreur de base de données).
 
 ## Structure
 
