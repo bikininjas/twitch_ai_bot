@@ -5,8 +5,10 @@ Générateur de réponses avec personnalités multiples et Gemini
 import logging
 import random
 from typing import Optional, List, Dict
+
 from .config import GeminiConfig
 from .personality_manager import PersonalityManager
+from utils.config import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,18 @@ class GeminiResponseGenerator:
         """Initialise le générateur de réponses"""
         self.config = GeminiConfig()
         self.model = self.config.get_model()
-        self.personality_manager = PersonalityManager()
+
+        storage_options = {}
+        try:
+            app_config = load_config()
+            storage_options = app_config.get("storage", {})
+        except Exception as exc:  # pragma: no cover - log et continuer
+            logger.warning(
+                "Impossible de charger la configuration globale (fallback JSON): %s",
+                exc,
+            )
+
+        self.personality_manager = PersonalityManager(storage_options=storage_options)
 
         # Initialiser avec une personnalité aléatoire (force le premier changement)
         self.personality_manager.change_personality(force=True)

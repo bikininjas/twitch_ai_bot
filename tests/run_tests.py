@@ -18,9 +18,9 @@ def run_tests():
         ("test_functionality.py", "Tests de fonctionnalité"),
         ("test_twitch.py", "Tests de connexion Twitch"),
         ("test_gemini.py", "Tests de connexion Gemini"),
+        ("test_authentication.py", "Tests d'authentification complets"),
         ("test_personality_manager.py", "Tests de personnalités"),
     ]
-
     test_dir = Path(__file__).parent
     results = []
 

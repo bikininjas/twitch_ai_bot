@@ -1,8 +1,5 @@
-"""
-Gestionnaire de personnalités multiples pour nova_the_red_cat basé sur JSON
-"""
+"""Gestionnaire de personnalités multiples pour nova_the_red_cat."""
 
-import json
 import logging
 import os
 import random
@@ -11,6 +8,11 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 from .personality_schema import PersonalityConfig
+from .personality_store import (
+    BasePersonalityStore,
+    JsonPersonalityStore,
+    build_store,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +39,17 @@ class Personality:
 
 
 class PersonalityManager:
-    """Gestionnaire des personnalités multiples du bot basé sur JSON"""
+    """Gestionnaire des personnalités multiples du bot."""
 
-    def __init__(self, cooldown_time: int = 300):
+    def __init__(
+        self,
+        cooldown_time: int = 300,
+        store: Optional[BasePersonalityStore] = None,
+        storage_options: Optional[dict] = None,
+    ):
         self.default_cooldown = cooldown_time
         self.cooldown_time = cooldown_time
+        self.store = store or build_store(storage_options)
         self.personalities: Dict[str, Personality] = self._load_personalities()
         self.current_personality: Optional[Personality] = None
         self.last_change_time = 0.0
@@ -49,95 +57,94 @@ class PersonalityManager:
         self._set_default_personality()
 
     def _load_personalities(self) -> Dict[str, Personality]:
-        """Charge les personnalités depuis les fichiers JSON individuels"""
-        personalities_dir = os.path.join(os.path.dirname(__file__), "personalities")
-
+        """Charge les personnalités depuis le backend configuré."""
         try:
-            personalities = {}
-
-            if not os.path.exists(personalities_dir):
-                logger.error(
-                    f"Dossier des personnalités introuvable : {personalities_dir}"
-                )
-                return self._get_default_personality()
-
-            # Parcourir tous les fichiers JSON dans le dossier personalities
-            for filename in os.listdir(personalities_dir):
-                if filename.endswith(".json"):
-                    personality_type = filename[:-5]  # Enlever .json
-                    file_path = os.path.join(personalities_dir, filename)
-
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            raw_data = json.load(f)
-
-                        config = PersonalityConfig(**raw_data)
-
-                        announcement_variants = config.announcement_variants or [
-                            f"{config.emoji} {phrase} ! Mode gaming activé ! {config.emoji}"
-                            for phrase in config.iconic_phrases[:3]
-                        ]
-
-                        signature = config.signature or f"- nova {config.emoji}"
-
-                        prompt_sections = [
-                            f"Tu es {config.name}, un bot Twitch qui parle comme {config.cultural_figure} !",
-                            "IMPORTANT : Tu DOIS répondre en FRANÇAIS uniquement, SAUF pour :",
-                            "- Les expressions gamers universelles (GG, noob, etc.)",
-                            "- Le jargon Twitch/internet (POGGERS, KEKW, etc.)",
-                            "",
-                            f"Utilise les expressions iconiques : {', '.join(config.iconic_phrases)}",
-                            "",
-                            "STYLE DE RÉPONSE :",
-                            "- Phrases courtes et complètes (toujours bien terminées)",
-                            "- Maximum 400 caractères au total",
-                            "- Termine par de la ponctuation (. ! ?)",
-                            "- Évite les phrases trop longues",
-                        ]
-
-                        if config.tone:
-                            prompt_sections.append(f"- Ton recommandé : {config.tone}")
-
-                        prompt_base = "\n".join(prompt_sections)
-
-                        personality = Personality(
-                            name=config.name,
-                            type=personality_type,
-                            description=config.description,
-                            cultural_figure=config.cultural_figure,
-                            prompt_base=prompt_base,
-                            signature=signature,
-                            announcement_variants=announcement_variants,
-                            color_emoji=config.emoji,
-                            catchphrases=config.iconic_phrases,
-                            tone=config.tone,
-                            triggers_keywords=[
-                                kw.lower() for kw in config.triggers.keywords
-                            ],
-                            triggers_commands=[
-                                cmd.lower() for cmd in config.triggers.commands
-                            ],
-                            sample_prompts=config.sample_prompts,
-                            cooldown_override=config.cooldown_override,
-                            schema_version=config.schema_version,
-                        )
-                        personalities[personality_type] = personality
-                        logger.debug(
-                            f"Personnalité chargée : {personality_type} -> {config.name} (v{config.schema_version})"
-                        )
-
-                    except Exception as e:
-                        logger.error(f"Erreur lors du chargement de {filename} : {e}")
-                        continue
-
-            logger.info(
-                f"Chargé {len(personalities)} personnalités depuis {personalities_dir}"
+            raw_personalities = self.store.load()
+        except Exception as exc:
+            logger.error(
+                "Erreur lors du chargement des personnalités (%s). Retour au JSON local.",
+                exc,
             )
-            return personalities if personalities else self._get_default_personality()
+            self.store = JsonPersonalityStore(
+                os.path.join(os.path.dirname(__file__), "personalities")
+            )
+            raw_personalities = self.store.load()
 
-        except Exception as e:
-            logger.error(f"Erreur lors du chargement des personnalités : {e}")
+        if not raw_personalities:
+            logger.warning("Aucune personnalité trouvée dans le backend actif")
             return self._get_default_personality()
+
+        personalities: Dict[str, Personality] = {}
+        for personality_type, config in raw_personalities.items():
+            try:
+                personalities[personality_type] = self._build_personality(
+                    personality_type, config
+                )
+            except Exception as exc:
+                logger.error(
+                    "Impossible de construire la personnalité %s: %s",
+                    personality_type,
+                    exc,
+                )
+
+        if not personalities:
+            logger.warning(
+                "Toutes les personnalités ont échoué à la construction. Fallback par défaut."
+            )
+            return self._get_default_personality()
+
+        logger.info(
+            "Chargé %d personnalités depuis le backend actif", len(personalities)
+        )
+        return personalities
+
+    def _build_personality(
+        self, personality_type: str, config: PersonalityConfig
+    ) -> Personality:
+        announcement_variants = config.announcement_variants or [
+            f"{config.emoji} {phrase} ! Mode gaming activé ! {config.emoji}"
+            for phrase in config.iconic_phrases[:3]
+        ]
+
+        signature = config.signature or f"- nova {config.emoji}"
+
+        prompt_sections = [
+            f"Tu es {config.name}, un bot Twitch qui parle comme {config.cultural_figure} !",
+            "IMPORTANT : Tu DOIS répondre en FRANÇAIS uniquement, SAUF pour :",
+            "- Les expressions gamers universelles (GG, noob, etc.)",
+            "- Le jargon Twitch/internet (POGGERS, KEKW, etc.)",
+            "",
+            f"Utilise les expressions iconiques : {', '.join(config.iconic_phrases)}",
+            "",
+            "STYLE DE RÉPONSE :",
+            "- Phrases courtes et complètes (toujours bien terminées)",
+            "- Maximum 400 caractères au total",
+            "- Termine par de la ponctuation (. ! ?)",
+            "- Évite les phrases trop longues",
+        ]
+
+        if config.tone:
+            prompt_sections.append(f"- Ton recommandé : {config.tone}")
+
+        prompt_base = "\n".join(prompt_sections)
+
+        return Personality(
+            name=config.name,
+            type=personality_type,
+            description=config.description,
+            cultural_figure=config.cultural_figure,
+            prompt_base=prompt_base,
+            signature=signature,
+            announcement_variants=announcement_variants,
+            color_emoji=config.emoji,
+            catchphrases=config.iconic_phrases,
+            tone=config.tone,
+            triggers_keywords=[kw.lower() for kw in config.triggers.keywords],
+            triggers_commands=[cmd.lower() for cmd in config.triggers.commands],
+            sample_prompts=config.sample_prompts,
+            cooldown_override=config.cooldown_override,
+            schema_version=config.schema_version,
+        )
 
     def _get_default_personality(self) -> Dict[str, Personality]:
         """Retourne une personnalité par défaut en cas d'erreur"""

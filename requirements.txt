@@ -10,6 +10,9 @@ python-dotenv==1.0.1
 # Data validation
 pydantic==2.8.2
 
+# Optional database backend
+sqlitecloud>=0.6,<1.0
+
 # Logging and utilities
 asyncio
 logging
