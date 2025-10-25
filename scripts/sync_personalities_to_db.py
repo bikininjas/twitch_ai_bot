@@ -64,7 +64,7 @@ def load_personality_files() -> Dict[str, dict]:
 
 
 def ensure_table(
-    connection: "sqlitecloud.Connection",
+    connection: sqlitecloud.Connection,
     table: str,
     type_column: str,
     payload_column: str,
@@ -81,7 +81,7 @@ def ensure_table(
 
 
 def sync(
-    connection: "sqlitecloud.Connection",
+    connection: sqlitecloud.Connection,
     table: str,
     type_column: str,
     payload_column: str,
