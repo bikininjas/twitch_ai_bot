@@ -7,7 +7,9 @@
 
 # Configuration
 BOT_NAME="nova_the_red_cat"
-BOT_SCRIPT="venv/bin/python3 -m src.main"
+VENV_DIR=".venv"
+PYTHON_BIN="$VENV_DIR/bin/python"
+BOT_SCRIPT="$PYTHON_BIN -m src.main"
 PID_FILE="logs/bot.pid"
 LOG_DIR="$PWD/logs"
 
@@ -104,6 +106,13 @@ start_bot() {
     
     if is_bot_running; then
         echo -e "${YELLOW}${WARNING} Le bot est déjà en cours d'exécution (PID: $(get_bot_pid))${NC}"
+        return 1
+    fi
+
+    if [ ! -x "$PYTHON_BIN" ]; then
+        echo -e "${RED}${CROSS} Environnement virtuel introuvable (${PYTHON_BIN})${NC}"
+        echo -e "${YELLOW}${WARNING} Créez-le avec: python3 -m venv ${VENV_DIR}${NC}"
+        echo -e "${YELLOW}${WARNING} Puis installez les dépendances avec: source ${VENV_DIR}/bin/activate && pip install -r requirements.txt${NC}"
         return 1
     fi
     
