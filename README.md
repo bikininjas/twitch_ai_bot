@@ -22,6 +22,8 @@ Un bot Twitch intelligent et sarcastique alimenté par Google Gemini AI qui inte
 ./install.sh
 ```
 
+Le script crée l'environnement virtuel `.venv`, installe les dépendances et génère un fichier `.env` à partir de `.env.example`.
+
 ### Gestionnaire de Bot
 
 ```bash
@@ -62,11 +64,12 @@ twitch_ai_bot/
 │   ├── test_gemini.py          # Tests Gemini AI
 │   ├── test_functionality.py   # Tests de fonctionnalité
 │   └── run_tests.py            # Script de test global
-├── personalities_config.json   # Configuration des 8 personnalités
 ├── bot_manager.sh              # Gestionnaire interactif du bot
 ├── install.sh                  # Script d'installation automatique
 ├── BOT_MANAGER_README.md       # Documentation du gestionnaire
+├── src/gemini_ai/personalities/ # Personnalités JSON individuelles
 ├── .env                        # Variables d'environnement (à configurer)
+├── .env.example                # Modèle d'environnement
 ├── .gitignore                  # Fichiers ignorés par Git
 ├── requirements.txt            # Dépendances Python
 ├── bot.py                      # Script de lancement simple
@@ -75,7 +78,7 @@ twitch_ai_bot/
 
 ## 🎭 Système de Personnalités
 
-Le bot dispose de 8 personnalités distinctes configurées dans `personalities_config.json` :
+Le bot dispose de 8 personnalités distinctes configurées via les fichiers JSON du dossier `src/gemini_ai/personalities/` :
 
 1. **👑 Nova the Red Cat** - Personnalité de base sarcastique
 2. **🧙‍♂️ Gandalf** - Sage et mystérieux avec références LOTR
@@ -108,9 +111,11 @@ git clone https://github.com/bikininjas/twitch_ai_bot.git
 cd twitch_ai_bot
 ```
 
-### 3. Installer les dépendances
+### 3. Créer l'environnement virtuel et installer les dépendances
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -131,7 +136,13 @@ pip install -r requirements.txt
 
 #### Fichier .env
 
-Modifiez le fichier `.env` à la racine du projet :
+Copiez le modèle `.env.example` puis éditez vos valeurs :
+
+```bash
+cp .env.example .env
+```
+
+Ensuite, modifiez le fichier `.env` à la racine du projet :
 
 ```env
 # Twitch Bot Configuration
@@ -146,6 +157,10 @@ GEMINI_API_KEY=votre_clé_api_gemini
 # Bot Behavior Configuration
 OWNER_USERNAME=redpikpik
 BOT_PERSONALITY=sarcastic
+
+# Logging
+LOG_LEVEL=INFO
+LOG_DIR=logs
 ```
 
 **⚠️ Important** : Ne partagez jamais votre fichier `.env` ! Il est déjà dans le `.gitignore`.
@@ -173,6 +188,8 @@ python3 tests/test_functionality.py # Test fonctionnalités
 ./bot_manager.sh
 ```
 
+Assurez-vous que l'environnement virtuel `.venv` est créé (via `./install.sh` ou `python3 -m venv .venv`) avant d'utiliser le gestionnaire : il lance le bot avec `.venv/bin/python`.
+
 ### Lancement Direct
 
 ```bash
@@ -185,6 +202,8 @@ python3 src/main.py
 # En arrière-plan avec logs
 nohup python3 bot.py > logs/bot.log 2>&1 &
 ```
+
+Activez d'abord l'environnement virtuel (`source .venv/bin/activate`) pour vous assurer que les bonnes dépendances et variables d'environnement sont utilisées.
 
 ### Comportement du Bot
 
@@ -252,7 +271,7 @@ Ajoutez ces variables à votre `.env` pour personnaliser les logs :
 
 ```env
 LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR
-LOG_FILE=logs/bot.log      # Fichier de log
+LOG_DIR=logs               # Dossier de logs
 ```
 
 ### Personnalisation de la Personnalité

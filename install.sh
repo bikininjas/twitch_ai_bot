@@ -23,6 +23,12 @@ WARNING="⚠️"
 INFO="ℹ️"
 GEAR="⚙️"
 
+# Configuration d'environnement
+VENV_DIR=".venv"
+PYTHON_BIN=""
+PIP_BIN=""
+PYTHON_ENV_BIN=""
+
 print_header() {
     clear
     echo -e "${PURPLE}╔══════════════════════════════════════════════════════════════════════════════╗${NC}"
@@ -57,7 +63,8 @@ check_python() {
     print_step "Vérification de Python"
     
     if command -v python3 &> /dev/null; then
-        PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
+        PYTHON_BIN=$(command -v python3)
+        PYTHON_VERSION=$($PYTHON_BIN --version 2>&1 | cut -d' ' -f2)
         print_success "Python 3 détecté (version $PYTHON_VERSION)"
         return 0
     else
@@ -67,13 +74,47 @@ check_python() {
     fi
 }
 
+create_virtualenv() {
+    print_step "Création de l'environnement virtuel (.venv)"
+
+    if [ -d "$VENV_DIR" ]; then
+        print_info "Environnement virtuel déjà présent dans $VENV_DIR"
+    else
+        if "$PYTHON_BIN" -m venv "$VENV_DIR"; then
+            print_success "Environnement virtuel créé"
+        else
+            print_error "Échec de la création de l'environnement virtuel"
+            return 1
+        fi
+    fi
+
+    PIP_BIN="$VENV_DIR/bin/pip"
+    PYTHON_ENV_BIN="$VENV_DIR/bin/python"
+
+    if [ ! -x "$PYTHON_ENV_BIN" ]; then
+        print_error "Python virtuel introuvable dans $VENV_DIR/bin/python"
+        return 1
+    fi
+
+    return 0
+}
+
 # Installation des dépendances
 install_dependencies() {
     print_step "Installation des dépendances Python"
     
+    if [ -z "$PIP_BIN" ]; then
+        PIP_BIN="$VENV_DIR/bin/pip"
+    fi
+
+    if [ ! -x "$PIP_BIN" ]; then
+        print_error "pip introuvable dans l'environnement virtuel ($PIP_BIN)"
+        return 1
+    fi
+
     if [ -f "requirements.txt" ]; then
-        if python3 -m pip install -r requirements.txt; then
-            print_success "Dépendances installées avec succès"
+        if "$PIP_BIN" install -r requirements.txt; then
+            print_success "Dépendances installées avec succès dans $VENV_DIR"
         else
             print_error "Échec de l'installation des dépendances"
             return 1
@@ -81,6 +122,8 @@ install_dependencies() {
     else
         print_warning "Fichier requirements.txt non trouvé"
     fi
+
+    return 0
 }
 
 # Création de la structure de dossiers
@@ -97,33 +140,14 @@ create_directories() {
 setup_environment() {
     print_step "Configuration de l'environnement"
     
-    # Créer un fichier .env d'exemple s'il n'existe pas
-    if [ ! -f ".env" ]; then
-        cat > .env << 'EOF'
-# Configuration Nova Bot
-# Copiez ce fichier et remplissez vos valeurs
-
-# Twitch Configuration
-TWITCH_BOT_TOKEN=your_twitch_oauth_token_here
-TWITCH_CHANNEL=your_channel_name_here
-TWITCH_BOT_USERNAME=nova_the_red_cat
-
-# Gemini AI Configuration  
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Bot Configuration
-BOT_PERSONALITY_COOLDOWN=300
-BOT_RESPONSE_DELAY=1
-BOT_MAX_MESSAGE_LENGTH=200
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=logs/nova_bot.log
-EOF
-        print_success "Fichier .env d'exemple créé"
-        print_warning "Veuillez éditer le fichier .env avec vos vraies valeurs"
-    else
+    if [ -f ".env" ]; then
         print_info "Fichier .env existant détecté"
+    elif [ -f ".env.example" ]; then
+        cp .env.example .env
+        print_success "Fichier .env créé à partir de .env.example"
+        print_warning "Mettez à jour .env avec vos identifiants Twitch et Gemini"
+    else
+        print_warning "Modèle .env.example introuvable. Créez un fichier .env manuellement."
     fi
 }
 
@@ -132,7 +156,9 @@ test_configuration() {
     print_step "Test de la configuration"
     
     # Vérifier que le module principal peut être importé
-    if python3 -c "import src.main" 2>/dev/null; then
+    local python_bin=${PYTHON_ENV_BIN:-$PYTHON_BIN}
+
+    if "$python_bin" -c "import src.main" 2>/dev/null; then
         print_success "Module principal importable"
     else
         print_warning "Impossible d'importer le module principal (vérifiez .env)"
@@ -178,10 +204,16 @@ main() {
     if ! check_python; then
         exit 1
     fi
+
+    if ! create_virtualenv; then
+        exit 1
+    fi
     
     create_directories
     setup_environment
-    install_dependencies
+    if ! install_dependencies; then
+        exit 1
+    fi
     test_configuration
     setup_shortcuts
     
@@ -194,9 +226,10 @@ main() {
     print_success "Nova Bot Manager installé avec succès!"
     echo ""
     print_info "Prochaines étapes:"
-    echo -e "  ${YELLOW}1.${NC} Éditez le fichier ${WHITE}.env${NC} avec vos tokens et clés API"
-    echo -e "  ${YELLOW}2.${NC} Lancez ${WHITE}./bot_manager.sh${NC} ou ${WHITE}nova${NC} (si alias configuré)"
-    echo -e "  ${YELLOW}3.${NC} Utilisez le menu interactif pour gérer votre bot"
+    echo -e "  ${YELLOW}1.${NC} Activez l'environnement virtuel: ${WHITE}source ${VENV_DIR}/bin/activate${NC}"
+    echo -e "  ${YELLOW}2.${NC} Éditez le fichier ${WHITE}.env${NC} avec vos tokens et clés API"
+    echo -e "  ${YELLOW}3.${NC} Lancez ${WHITE}./bot_manager.sh${NC} ou ${WHITE}nova${NC} (si alias configuré)"
+    echo -e "  ${YELLOW}4.${NC} Utilisez le menu interactif pour gérer votre bot"
     echo ""
     print_info "Fichiers importants:"
     echo -e "  ${CYAN}Configuration:${NC} .env"
